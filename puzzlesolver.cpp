@@ -1,11 +1,32 @@
+/*
+@File contents: PuzzleSolver data member and function delarations
+
+@Purpose: To instantiate SudokuFactory and SudokuFitness objects that will
+ take in text data to be pcocessed and instantiate a Sudoku object containing
+ a board of the text data provided. PuzzleSolver acts as a manager of the objects
+ in order to solve the Sudoku puzzle provided.
+
+@Assumptions: Puzzle & subclasses, Population & subclasses, Fitness & subclasses,
+and Reproduction and subclasses are defined. Text data to be imported is assumed to contain
+no erroneous data and is formatting properly.
+
+@Authors: Amanda Todakonzie, Logan Hoskisson & Adriel Mercado
+*/
 #include "puzzlesolver.h"
 
-
+//----------------------------------------------------------------------------
+// PuzzleSolver(): Default Constructor
+// @pre:None
+// @post: An Puzzle Solver object is instantiated
 PuzzleSolver::PuzzleSolver() {
 	originBoard = nullptr;
 	solvedBoard = nullptr;
 }
 
+//----------------------------------------------------------------------------
+// ~PuzzleSolver(): Destructor
+// @pre:None
+// @post: deletes the pointers to originBoard and solvedBoard, set to nullptr
 PuzzleSolver::~PuzzleSolver() {
 	delete originBoard;
 	delete solvedBoard;
@@ -13,6 +34,12 @@ PuzzleSolver::~PuzzleSolver() {
 	solvedBoard = nullptr;
 }
 
+void PuzzleSolver::reset(){
+	delete originBoard;
+	delete solvedBoard;
+	originBoard = nullptr;
+	solvedBoard = nullptr;
+}
 
 //----------------------------------------------------------------------------
 // loadPuzzle(): reads in puzzle data and builds a new puzzle object based
@@ -25,14 +52,13 @@ PuzzleSolver::~PuzzleSolver() {
 // private data member originBoard is set to the Puzzle object
 void PuzzleSolver::loadPuzzle(istream& inFile) {
 
-		Puzzle* tempPuzzle;
-		tempPuzzle = puzzFac.createPuzzle();
-
+		Puzzle* tempPuzzle = puzzFac.createPuzzle();
+		// check if file is empty
 		if (inFile.eof()) {
 			cout << "File is invalid, please review importing file." << endl;
 			return;
 		}
-
+		// call on >> method of puzzle to import data
 		inFile >> *tempPuzzle;
 		originBoard = tempPuzzle;
 }
@@ -46,100 +72,71 @@ void PuzzleSolver::loadPuzzle(istream& inFile) {
 // in as a referenced argument
 // @post: method provides a pointer to be assigned to the private data member "solvedBoard"
 // one the algorithm is completed and the puzzle is solved with a best score of 0
-void PuzzleSolver::solve(Puzzle& origin) {
+void PuzzleSolver::solve(int generations, int populationSize, int cullPercentage) {
 
 	// instantiate the population object to hold sudoku puzzles
-	SudokuPopulation pop(*originBoard);
-
-	//initial generation of 1st population
-	pop.generate();
+	SudokuPopulation pop(*originBoard, populationSize, cullPercentage);
 	
 	// obtain the best fitness score of the intial population
 	int bestScore = INT_MAX;
-	pop.cull(puzzEval);
+	pop.cull(puzzEval); // call on population cull method
 	bestScore = pop.bestFitness(); // obtain intial best score
+	int i = 2; // counter of generations
+	cout << "Solving Puzzle... please sit tight :)" << endl;
 
-	// enter generation algorithm
+	// enter genetic algorithm
 	while (bestScore != 0) {
-		pop.newGeneration(puzzFac);
-		pop.cull(puzzEval);
-		bestScore = pop.bestFitness();
+		pop.newGeneration(puzzFac); // call to create new generation based on culled population
+		pop.cull(puzzEval); // call to cull the generation
+		bestScore = pop.bestFitness(); // obtain best score of the generation
+		//cout << "Best Score of Population " << i << ": " << bestScore << endl;
+		if (i == generations) {
+			break;
+		}
+		i++;
 	}
-	// return the solved puzzle object
-	solvedBoard = pop.bestIndividual();
-}
 
-void PuzzleSolver::testFirstGeneration() {
-	cout << "Beginning testFirstGeneration()" << endl;
-	SudokuPopulation pop(*originBoard);
-	pop.generate();
-	cout << "1st Generaton Successful" << endl;
-	int bestScore = INT_MAX;
-	pop.cull(puzzEval);
-	cout << "1st Cull Successful" << endl;
-	bestScore = pop.bestFitness(); // obtain intial best score
-	cout << "1st Generaton Tst Successful" << endl;
-}
-
-
-
-void PuzzleSolver::testOffSpring() {
-	cout << "Beginning testOffSpring()" << endl;
-	SudokuPopulation pop(*originBoard);
-	pop.generate();
-
-	int bestScore = INT_MAX;
-	pop.cull(puzzEval);
-	cout << "1st Cull Successful" << endl;
-	bestScore = pop.bestFitness(); // obtain intial best score
-	cout << "Best Score: " << bestScore << endl;
-
-	pop.newGeneration(puzzFac); // offspring generation
-	cout << "2nd Generation Successful" << endl;
-	pop.cull(puzzEval);
-	cout << "1st Cull Successful" << endl;
-	bestScore = pop.bestFitness();
-	cout << "Best Score: " << bestScore << endl;
-
-	cout << "testOffSpring Successful" << endl;
+	// if puzzle is solved, retrieve solved board & display
+	if (bestScore == 0) {
+		cout << "\n\n*** Puzzle has been solved! ***" << endl;
+		cout << "Best Score of Population " << i << ": " << bestScore << endl;
+		cout << "Solved Board: " << endl;
+		// return the solved puzzle object
+		cout << *(pop.bestIndividual());
+	} else{
+	// retrieve best of board and display
+		cout << i << " generations done, puzzle not solved" << endl;
+		cout << "Best Score of Population " << i << ": " << bestScore << endl;
+		cout << *(pop.bestIndividual());
+	}
 }
 
 
 //----------------------------------------------------------------------------
 // displayBoard(): function will send a output to the console to display the
 // origina puzzle and puzzle that is contained within the population that
-// possesses the best fitness score of the whole generation
+// possesses the best fitness score of the whole generation          
 // @pre: none
 // @post: the private data members of originBoard are displayed, along with either the
 // solvedBoard if the algorithm is completed and puzzle is solved, OR it will display
 // best individual sudoku puzzle object that is returned from the bestIndividual() function
 // from the Population class. 
 void PuzzleSolver::displayBoard() {
-
-	cout << "Origin Board:\n" << endl;
+	cout << "Origin Board:" << endl;
 	cout << *originBoard;
-
-	cout << "------------------------------------------------------" << endl;
-
-	if (solvedBoard != nullptr) {
-		cout << "Solved Board\n" << endl;
-		cout << *solvedBoard;
-	}
-
-	cout << "Puzzle not yet solved." << endl;
-	cout << "Best Score Board:" << endl;
-	cout << endl;
-	//Puzzle* bestScoreBoard= puzzPop.bestIndividual();
-	//cout << bestScoreBoard;
 
 }
 
 
-
+//----------------------------------------------------------------------------
+// testPuzzAndSudoku(): method to test the functions of the parent class Puzzle
+// and the child class Sudoku
+// @pre: None
+// @post: None
 void PuzzleSolver::testPuzzAndSudoku() {
 
 	cout << "Testing assignment operator" << endl;
-	Puzzle* aCopy = new Sudoku;
+	Puzzle* aCopy = new Sudoku();
 	*aCopy = *originBoard;
 
 	cout << "\nTesting quickprint" << endl;
@@ -169,7 +166,7 @@ void PuzzleSolver::testPuzzAndSudoku() {
 		cout << "false";
 	}
 	
-
+	
 	cout << "\nTesting < operator" << endl;
 	if (*originBoard < *aCopy) {
 		cout << "originBoard is less than aCopy" << endl;
@@ -196,4 +193,44 @@ void PuzzleSolver::testPuzzAndSudoku() {
 	else {
 		cout << "false";
 	}
+
+}
+
+//----------------------------------------------------------------------------
+// testFirstGeneration(): method to test the Population class and Fitness class
+// and their functionalies
+// @pre: None
+// @post: None
+void PuzzleSolver::testFirstGeneration() {
+	cout << "Beginning testFirstGeneration()" << endl;
+	SudokuPopulation pop(*originBoard);
+	cout << "1st Generaton Successful" << endl;
+	pop.cull(puzzEval);
+	cout << "1st Cull Successful" << endl;
+	cout << "Best Sudoku Score: " << pop.bestFitness() << endl; // obtain intial best score
+	cout << "1st Generaton Test Successful" << endl;
+}
+
+
+//----------------------------------------------------------------------------
+// testOffSpring(): method to test the Population class, the Fitness, and the 
+// Reproduction class, and their functionalies
+// @pre: None
+// @post: None
+void PuzzleSolver::testOffSpring() {
+	cout << "Beginning testOffSpring()" << endl;
+	SudokuPopulation pop(*originBoard);
+
+	pop.cull(puzzEval);
+	cout << "1st Cull Successful" << endl;
+	cout << "Best Sudoku Score: " << pop.bestFitness() << endl; // obtain intial best score
+
+	pop.newGeneration(puzzFac); // offspring generation
+
+	cout << "2nd Generation Successful" << endl;
+
+	pop.cull(puzzEval);
+	cout << "2nd Cull Successful" << endl;
+	cout << "Best Sudoku Score: " << pop.bestFitness() << endl; // obtain 2nd generation best score
+	cout << "testOffSpring Successful" << endl;
 }

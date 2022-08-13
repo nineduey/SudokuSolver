@@ -1,5 +1,15 @@
-#include "reproduction.h"
+/*
+@File contents: Reproduction function definitions
 
+@Purpose: Reproduction uses a factory pattern to produce new Sudoku objects that
+ are empty boards. Child Class SudokuOffSpring handles the reproduction of mutated
+ Sudoku objects based on Sudoku objects handed off by reference. 
+
+@Assumptions: Child Class SudokuOffSpring is defined. Classes Puzzle and Sudoku are defined.
+
+@Authors: Amanda Todakonzie, Logan Hoskisson & Adriel Mercado
+*/
+#include "reproduction.h"
 
 //----------------------------------------------------------------------------
 // Reproduction(): default constructor that declares elements in 'map' HashMap 
@@ -26,7 +36,6 @@ Reproduction::~Reproduction() {
       puzzleFac[i] = nullptr;
    }
 }
-
 
 //----------------------------------------------------------------------------
 // createSudoku(): Instantiates Puzzle object to equal puzzle object of the type

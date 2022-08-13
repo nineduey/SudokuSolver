@@ -1,12 +1,23 @@
+/*
+@File contents: PuzzleFactory function defintions
+
+@Purpose: PuzzleFactory is an abstract class that contains a Reproduction
+ object that will produce new and mutated Sudoku objects
+
+@Assumptions: Child Class SudokuFactory is defined and Classes Puzzle & Sudoku
+are defined
+
+@Authors: Amanda Todakonzie, Logan Hoskisson & Adriel Mercado
+*/
 #include "puzzlefactory.h"
 
 //----------------------------------------------------------------------------
 // PuzzleFactory(): Default Constructor
-// Pre-conditions:None
-// Post-conditions: An PuzzleFactory object is instantiated
+// @pre:None
+// @post: An Puzzle Factory object is instantiated
 PuzzleFactory::PuzzleFactory() {}
 
 // PuzzleFactory(): Virtual Destructor
-// Pre-conditions:None
-// Post-conditions: PuzzleFactory object is deleted
+// @pre:None
+// @post: PuzzleFactory object is deleted
 PuzzleFactory::~PuzzleFactory() {}
